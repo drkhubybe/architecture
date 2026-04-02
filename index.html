@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Khubybe Meta Architecture</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@700&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --cream: #f5f0e8;
+    --muted: #6b6b7a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 24px 100px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 72px;
+  }
+
+  .header-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+    opacity: 0.8;
+  }
+
+  .header h1 {
+    font-family: 'Inter', sans-serif;
+    font-size: 35px;
+    font-weight: 700;
+    color: var(--cream);
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .header h1 span { color: var(--gold); }
+
+  .header-sub {
+    font-size: 15px;
+    color: var(--muted);
+    font-weight: 300;
+    letter-spacing: 0.3px;
+  }
+
+  /* Framework Banner */
+  .framework-banner {
+    background: linear-gradient(135deg, rgba(201,168,76,0.08), rgba(201,168,76,0.03));
+    border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 12px;
+    padding: 20px 28px;
+    margin-bottom: 48px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .torch-icon { font-size: 28px; flex-shrink: 0; }
+
+  .framework-banner-text strong {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .framework-banner-text p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* Hierarchy */
+  .hierarchy {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .hierarchy::before {
+    content: '';
+    position: absolute;
+    left: 31px;
+    top: 40px;
+    bottom: 40px;
+    width: 2px;
+    background: linear-gradient(to bottom,
+      rgba(201,168,76,0.6) 0%,
+      rgba(201,168,76,0.4) 30%,
+      rgba(100,180,100,0.4) 50%,
+      rgba(201,100,76,0.4) 70%,
+      rgba(76,140,201,0.3) 100%
+    );
+    pointer-events: none;
+  }
+
+  .layer {
+    position: relative;
+    display: flex;
+    gap: 20px;
+    align-items: stretch;
+  }
+
+  .layer[data-level="0"] { padding-left: 0; }
+  .layer[data-level="1"] { padding-left: 32px; }
+  .layer[data-level="2"] { padding-left: 64px; }
+  .layer[data-level="3"] { padding-left: 96px; }
+  .layer[data-level="4"] { padding-left: 120px; }
+  .layer[data-level="5"] { padding-left: 144px; }
+
+  .layer-node {
+    width: 64px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+  }
+
+  .node-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+    border: 2px solid;
+  }
+
+  .node-line { width: 2px; flex: 1; min-height: 20px; opacity: 0.3; }
+
+  /* Card */
+  .layer-card {
+    flex: 1;
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 12px;
+    border: 1px solid;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+
+  .card-title { font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 700; }
+
+  .card-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    opacity: 0.8;
+  }
+
+  .card-definition { font-size: 13px; color: var(--muted); margin-bottom: 14px; line-height: 1.6; font-style: italic; }
+
+  .card-example { border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; }
+
+  .example-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    opacity: 0.6;
+  }
+
+  .example-content { font-size: 13px; line-height: 1.6; }
+  .example-content strong { font-weight: 500; }
+
+  .card-dr-k { border-radius: 8px; padding: 10px 14px; display: flex; align-items: flex-start; gap: 8px; }
+
+  .drk-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    opacity: 0.5;
+    margin-top: 2px;
+  }
+
+  .drk-content { font-size: 12px; line-height: 1.6; opacity: 0.85; }
+
+  /* Pure CSS details/summary toggle */
+  details {
+    margin-top: 12px;
+  }
+
+  summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    list-style: none;
+    width: fit-content;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.55;
+    transition: opacity 0.2s;
+    user-select: none;
+  }
+
+  summary::-webkit-details-marker { display: none; }
+
+  summary:hover { opacity: 0.9; }
+
+  summary::before {
+    content: '▶';
+    font-size: 9px;
+    transition: transform 0.2s;
+    display: inline-block;
+  }
+
+  details[open] summary::before { transform: rotate(90deg); }
+
+  .criteria-body {
+    margin-top: 12px;
+    border-radius: 8px;
+    padding: 14px 16px;
+    border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(0,0,0,0.2);
+  }
+
+  .criteria-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+
+  .criteria-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .criterion { display: flex; gap: 10px; align-items: flex-start; }
+
+  .criterion-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    width: 18px;
+    flex-shrink: 0;
+    opacity: 0.4;
+    margin-top: 2px;
+  }
+
+  .criterion-name { font-size: 12px; font-weight: 500; margin-bottom: 2px; }
+
+  .criterion-test { font-size: 11px; color: var(--muted); line-height: 1.5; font-style: italic; }
+
+  /* COLOUR THEMES */
+
+  /* BELIEF */
+  .theme-belief .node-circle { background: rgba(201,168,76,0.15); border-color: var(--gold); color: var(--gold); }
+  .theme-belief .node-line { background: var(--gold); }
+  .theme-belief .layer-card { background: linear-gradient(135deg, rgba(201,168,76,0.07), rgba(201,168,76,0.02)); border-color: rgba(201,168,76,0.3); }
+  .theme-belief .card-title { color: var(--gold-light); }
+  .theme-belief .card-tag { background: rgba(201,168,76,0.15); color: var(--gold); }
+  .theme-belief .card-example { background: rgba(201,168,76,0.06); border-left: 3px solid rgba(201,168,76,0.4); }
+  .theme-belief .example-label { color: var(--gold); }
+  .theme-belief .example-content { color: #d4c090; }
+  .theme-belief .card-dr-k { background: rgba(201,168,76,0.05); }
+  .theme-belief .drk-content { color: #c9a84c; }
+  .theme-belief summary { color: var(--gold); }
+  .theme-belief .criterion-name { color: var(--gold-light); }
+
+  /* PHILOSOPHY */
+  .theme-philosophy .node-circle { background: rgba(140,100,220,0.15); border-color: #a07edc; color: #a07edc; }
+  .theme-philosophy .node-line { background: #8c64dc; }
+  .theme-philosophy .layer-card { background: linear-gradient(135deg, rgba(140,100,220,0.07), rgba(140,100,220,0.02)); border-color: rgba(140,100,220,0.25); }
+  .theme-philosophy .card-title { color: #c4a8f0; }
+  .theme-philosophy .card-tag { background: rgba(140,100,220,0.15); color: #a07edc; }
+  .theme-philosophy .card-example { background: rgba(140,100,220,0.06); border-left: 3px solid rgba(140,100,220,0.4); }
+  .theme-philosophy .example-label { color: #a07edc; }
+  .theme-philosophy .example-content { color: #c4a8f0; }
+  .theme-philosophy .card-dr-k { background: rgba(140,100,220,0.05); }
+  .theme-philosophy .drk-content { color: #a07edc; }
+  .theme-philosophy summary { color: #a07edc; }
+  .theme-philosophy .criterion-name { color: #c4a8f0; }
+
+  /* MENTAL MODELS */
+  .theme-mental .node-circle { background: rgba(60,180,140,0.15); border-color: #3cb48c; color: #3cb48c; }
+  .theme-mental .node-line { background: #3cb48c; }
+  .theme-mental .layer-card { background: linear-gradient(135deg, rgba(60,180,140,0.07), rgba(60,180,140,0.02)); border-color: rgba(60,180,140,0.25); }
+  .theme-mental .card-title { color: #7ed4b4; }
+  .theme-mental .card-tag { background: rgba(60,180,140,0.15); color: #3cb48c; }
+  .theme-mental .card-example { background: rgba(60,180,140,0.06); border-left: 3px solid rgba(60,180,140,0.4); }
+  .theme-mental .example-label { color: #3cb48c; }
+  .theme-mental .example-content { color: #7ed4b4; }
+  .theme-mental .card-dr-k { background: rgba(60,180,140,0.05); }
+  .theme-mental .drk-content { color: #3cb48c; }
+  .theme-mental summary { color: #3cb48c; }
+  .theme-mental .criterion-name { color: #7ed4b4; }
+
+  /* PRINCIPLES */
+  .theme-principles .node-circle { background: rgba(220,100,80,0.15); border-color: #dc6450; color: #dc6450; }
+  .theme-principles .node-line { background: #dc6450; }
+  .theme-principles .layer-card { background: linear-gradient(135deg, rgba(220,100,80,0.07), rgba(220,100,80,0.02)); border-color: rgba(220,100,80,0.25); }
+  .theme-principles .card-title { color: #f0a090; }
+  .theme-principles .card-tag { background: rgba(220,100,80,0.15); color: #dc6450; }
+  .theme-principles .card-example { background: rgba(220,100,80,0.06); border-left: 3px solid rgba(220,100,80,0.4); }
+  .theme-principles .example-label { color: #dc6450; }
+  .theme-principles .example-content { color: #f0a090; }
+  .theme-principles .card-dr-k { background: rgba(220,100,80,0.05); }
+  .theme-principles .drk-content { color: #dc6450; }
+  .theme-principles summary { color: #dc6450; }
+  .theme-principles .criterion-name { color: #f0a090; }
+
+  /* OS */
+  .theme-os .node-circle { background: rgba(60,140,220,0.15); border-color: #3c8cdc; color: #3c8cdc; }
+  .theme-os .node-line { background: #3c8cdc; }
+  .theme-os .layer-card { background: linear-gradient(135deg, rgba(60,140,220,0.07), rgba(60,140,220,0.02)); border-color: rgba(60,140,220,0.25); }
+  .theme-os .card-title { color: #90c4f0; }
+  .theme-os .card-tag { background: rgba(60,140,220,0.15); color: #3c8cdc; }
+  .theme-os .card-example { background: rgba(60,140,220,0.06); border-left: 3px solid rgba(60,140,220,0.4); }
+  .theme-os .example-label { color: #3c8cdc; }
+  .theme-os .example-content { color: #90c4f0; }
+  .theme-os .card-dr-k { background: rgba(60,140,220,0.05); }
+  .theme-os .drk-content { color: #3c8cdc; }
+  .theme-os summary { color: #3c8cdc; }
+  .theme-os .criterion-name { color: #90c4f0; }
+
+  /* PROTOCOL */
+  .theme-protocol .node-circle { background: rgba(220,160,60,0.15); border-color: #dca03c; color: #dca03c; }
+  .theme-protocol .node-line { background: #dca03c; }
+  .theme-protocol .layer-card { background: linear-gradient(135deg, rgba(220,160,60,0.07), rgba(220,160,60,0.02)); border-color: rgba(220,160,60,0.25); }
+  .theme-protocol .card-title { color: #f0d090; }
+  .theme-protocol .card-tag { background: rgba(220,160,60,0.15); color: #dca03c; }
+  .theme-protocol .card-example { background: rgba(220,160,60,0.06); border-left: 3px solid rgba(220,160,60,0.4); }
+  .theme-protocol .example-label { color: #dca03c; }
+  .theme-protocol .example-content { color: #f0d090; }
+  .theme-protocol .card-dr-k { background: rgba(220,160,60,0.05); }
+  .theme-protocol .drk-content { color: #dca03c; }
+  .theme-protocol summary { color: #dca03c; }
+  .theme-protocol .criterion-name { color: #f0d090; }
+
+  /* STEPS */
+  .theme-steps .node-circle { background: rgba(180,180,180,0.12); border-color: #909090; color: #909090; }
+  .theme-steps .node-line { background: #909090; }
+  .theme-steps .layer-card { background: linear-gradient(135deg, rgba(180,180,180,0.05), rgba(180,180,180,0.02)); border-color: rgba(180,180,180,0.15); }
+  .theme-steps .card-title { color: #c8c8c8; }
+  .theme-steps .card-tag { background: rgba(180,180,180,0.12); color: #909090; }
+  .theme-steps .card-example { background: rgba(180,180,180,0.05); border-left: 3px solid rgba(180,180,180,0.3); }
+  .theme-steps .example-label { color: #909090; }
+  .theme-steps .example-content { color: #c8c8c8; }
+  .theme-steps .card-dr-k { background: rgba(180,180,180,0.04); }
+  .theme-steps .drk-content { color: #909090; }
+  .theme-steps summary { color: #909090; }
+  .theme-steps .criterion-name { color: #c8c8c8; }
+
+  /* Framework section */
+  .framework-layer { margin-top: 48px; }
+
+  .framework-card {
+    background: linear-gradient(135deg, rgba(201,168,76,0.06), rgba(100,160,255,0.04));
+    border: 1px dashed rgba(201,168,76,0.35);
+    border-radius: 14px;
+    padding: 24px 28px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .framework-torch { font-size: 32px; flex-shrink: 0; }
+
+  .framework-body h3 {
+    font-family: 'Inter', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gold-light);
+    margin-bottom: 6px;
+  }
+
+  .framework-body .def { font-size: 13px; color: var(--muted); font-style: italic; margin-bottom: 12px; line-height: 1.6; }
+
+  .framework-examples { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .fw-pill {
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 0.5px;
+  }
+
+  .framework-flows { margin-top: 10px; font-size: 12px; color: var(--muted); line-height: 1.8; }
+  .framework-flows span { color: var(--gold); opacity: 0.7; }
+
+  .framework-card summary { color: var(--gold); }
+  .framework-card .criterion-name { color: var(--gold-light); }
+
+  /* Legend */
+  .legend {
+    margin-top: 48px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .legend-item {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legend-text strong { font-size: 12px; display: block; margin-bottom: 2px; }
+  .legend-text span { font-size: 11px; color: var(--muted); }
+
+  @media (max-width: 640px) {
+    .layer[data-level="2"] { padding-left: 32px; }
+    .layer[data-level="3"] { padding-left: 48px; }
+    .layer[data-level="4"] { padding-left: 60px; }
+    .layer[data-level="5"] { padding-left: 72px; }
+    .card-header { flex-direction: column; gap: 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="header-label">Khubybe Meta Architecture&#8482;</div>
+    <h1>From <span>Belief</span> to Action</h1>
+    <div class="header-sub">A complete map of how knowledge becomes behaviour</div>
+  </div>
+
+  <div class="framework-banner">
+    <div class="torch-icon">&#128294;</div>
+    <div class="framework-banner-text">
+      <strong>Note on Frameworks</strong>
+      <p>Frameworks are not a layer in the hierarchy. They are a <em>thinking torch</em> &#8212; carried fluidly across every level. A framework can be used to design an OS, build a protocol, or execute a single step.</p>
+    </div>
+  </div>
+
+  <div class="hierarchy">
+
+    <!-- BELIEF -->
+    <div class="layer theme-belief" data-level="0">
+      <div class="layer-node">
+        <div class="node-circle">&#10022;</div>
+        <div class="node-line" style="background: #c9a84c;"></div>
+      </div>
+      <div class="layer-card">
+        <div class="card-header">
+          <div class="card-title">Belief</div>
+          <div class="card-tag">Pre-rational &#183; Identity level</div>
+        </div>
+        <div class="card-definition">A statement accepted as ultimately true &#8212; often without requiring proof. Felt, inherited, revealed, or experienced. The soil everything else grows from.</div>
+        <div class="card-example">
+          <div class="example-label">Universal Example</div>
+          <div class="example-content">A surgeon believes <strong>human life is sacred.</strong> This doesn&#39;t come from a textbook. It precedes every decision they ever make in an operating theatre.</div>
+        </div>
+        <div class="card-dr-k">
+          <div class="drk-label">Dr. K</div>
+          <div class="drk-content">Allah is One. The Quran is truth. Every system I build must serve something greater than profit. The Rohingya people deserve freedom and dignity.</div>
+        </div>
+        <details>
+          <summary>Qualification Criteria</summary>
+          <div class="criteria-body">
+            <div class="criteria-title">To qualify as a Belief, it must pass all 6:</div>
+            <div class="criteria-list">
+              <div class="criterion"><span class="criterion-num">01</span><div class="criterion-body"><div class="criterion-name">Pre-Rational</div><div class="criterion-test">Test: Can you trace it to revelation, deep experience, or identity &#8212; not just logic? If it requires a chain of evidence &#8594; it&#39;s not a belief.</div></div></div>
+              <div class="criterion"><span class="criterion-num">02</span><div class="criterion-body"><div class="criterion-name">Identity-Level</div><div class="criterion-test">Test: If this were removed, would you feel like a different person? If removing it only changes behaviour &#8594; it&#39;s a principle, not a belief.</div></div></div>
+              <div class="criterion"><span class="criterion-num">03</span><div class="criterion-body"><div class="criterion-name">Unconditional</div><div class="criterion-test">Test: Does it hold even when life contradicts it? If it weakens under pressure &#8594; it was a preference, not a belief.</div></div></div>
+              <div class="criterion"><span class="criterion-num">04</span><div class="criterion-body"><div class="criterion-name">Generative</div><div class="criterion-test">Test: Can you trace at least one principle, model, or life decision back to it? If it produces nothing downstream &#8594; it&#39;s a surface opinion.</div></div></div>
+              <div class="criterion"><span class="criterion-num">05</span><div class="criterion-body"><div class="criterion-name">Beyond Full Proof or Disproof</div><div class="criterion-test">Test: Is it beyond complete empirical verification? If it can be fully proven with data &#8594; it&#39;s a mental model or fact, not a belief.</div></div></div>
+              <div class="criterion"><span class="criterion-num">06</span><div class="criterion-body"><div class="criterion-name">Survives Your Worst Moment</div><div class="criterion-test">Test: In your darkest night &#8212; grief, failure, loss &#8212; does it still hold? If it only holds when life is good &#8594; it was comfort, not conviction.</div></div></div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- PHILOSOPHY -->
+    <div class="layer theme-philosophy" data-level="1">
+      <div class="layer-node">
+        <div class="node-circle">&#9672;</div>
+        <div class="node-line" style="background: #8c64dc;"></div>
+      </div>
+      <div class="layer-card">
+        <div class="card-header">
+          <div class="card-title">Philosophy</div>
+          <div class="card-tag">Organised worldview</div>
+        </div>
+        <div class="card-definition">The structured system of thought that flows from belief. Takes raw belief and asks: what follows? How should I then live? What is real? What is good?</div>
+        <div class="card-example">
+          <div class="example-label">Universal Example</div>
+          <div class="example-content">Hippocratic philosophy: <strong>First, do no harm.</strong> Medicine exists to serve the patient, not the physician&#39;s ego or the hospital&#39;s revenue.</div>
+        </div>
+        <div class="card-dr-k">
+          <div class="drk-label">Dr. K</div>
+          <div class="drk-content">The Khubybe Doctrine &#8212; 10 layers, Absolute Truth (Quran &amp; Sunnah) at layer zero. Dunya is a means, not an end. Time is amanah. Build at civilisational scale.</div>
+        </div>
+        <details>
+          <summary>Qualification Criteria</summary>
+          <div class="criteria-body">
+            <div class="criteria-title">To qualify as Philosophy, it must pass all 5:</div>
+            <div class="criteria-list">
+              <div class="criterion"><span class="criterion-num">01</span><div class="criterion-body"><div class="criterion-name">Flows Directly From Belief</div><div class="criterion-test">Test: Can you trace it back to a specific belief? If it stands alone without a belief underneath &#8594; it&#39;s an opinion, not philosophy.</div></div></div>
+              <div class="criterion"><span class="criterion-num">02</span><div class="criterion-body"><div class="criterion-name">Answers a Fundamental Question</div><div class="criterion-test">Test: Does it answer one of: How should I live? What is real? What is good? If it only answers a tactical question &#8594; it belongs lower in the hierarchy.</div></div></div>
+              <div class="criterion"><span class="criterion-num">03</span><div class="criterion-body"><div class="criterion-name">Internally Consistent</div><div class="criterion-test">Test: Do all your philosophy statements align without contradiction? If two conflict &#8594; one is wrong or misplaced.</div></div></div>
+              <div class="criterion"><span class="criterion-num">04</span><div class="criterion-body"><div class="criterion-name">Structures Everything Below</div><div class="criterion-test">Test: Can you derive at least one mental model, principle, and OS decision from it? If not &#8594; it&#39;s a belief, not a philosophy.</div></div></div>
+              <div class="criterion"><span class="criterion-num">05</span><div class="criterion-body"><div class="criterion-name">Timeless &#8212; Not Trend-Dependent</div><div class="criterion-test">Test: Would this still hold in 50 years? If it&#39;s tied to a current trend &#8594; it&#39;s ideology, not philosophy.</div></div></div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- MENTAL MODELS -->
+    <div class="layer theme-mental" data-level="2">
+      <div class="layer-node">
+        <div class="node-circle">&#11041;</div>
+        <div class="node-line" style="background: #3cb48c;"></div>
+      </div>
+      <div class="layer-card">
+        <div class="card-header">
+          <div class="card-title">Mental Models</div>
+          <div class="card-tag">Maps of reality</div>
+        </div>
+        <div class="card-definition">Representations of how reality actually works. Not what to do &#8212; but how cause and effect operate. Once absorbed, permanently changes how you see the world.</div>
+        <div class="card-example">
+          <div class="example-label">Universal Example</div>
+          <div class="example-content"><strong>Compounding:</strong> Small consistent inputs produce exponential outputs over time. Once a doctor sees this model, they apply it to patient habits, hospital processes, and medical research.</div>
+        </div>
+        <div class="card-dr-k">
+          <div class="drk-label">Dr. K</div>
+          <div class="drk-content">Compounding (40-day cycles). You&#178; &#8212; quantum leap not linear growth. Leverage (Build Lever System&#8482;). Input/Output split &#8212; ikhtiyar is mine, outcome belongs to Allah.</div>
+        </div>
+        <details>
+          <summary>Qualification Criteria</summary>
+          <div class="criteria-body">
+            <div class="criteria-title">To qualify as a Mental Model, it must pass all 5:</div>
+            <div class="criteria-list">
+              <div class="criterion"><span class="criterion-num">01</span><div class="criterion-body"><div class="criterion-name">Describes How Reality Works</div><div class="criterion-test">Test: Does it explain cause-and-effect &#8212; not just in one domain? If it only applies to one situation &#8594; it&#39;s a tactic, not a model.</div></div></div>
+              <div class="criterion"><span class="criterion-num">02</span><div class="criterion-body"><div class="criterion-name">Cross-Domain Applicable</div><div class="criterion-test">Test: Can you apply it to at least 3 completely different areas of life? If domain-locked &#8594; it&#39;s a principle or tactic.</div></div></div>
+              <div class="criterion"><span class="criterion-num">03</span><div class="criterion-body"><div class="criterion-name">Changes Perception Permanently</div><div class="criterion-test">Test: Once understood, could you unsee it? If it didn&#39;t permanently shift how you view the world &#8594; it&#39;s information, not a model.</div></div></div>
+              <div class="criterion"><span class="criterion-num">04</span><div class="criterion-body"><div class="criterion-name">Descriptive, Not Prescriptive</div><div class="criterion-test">Test: Does it describe how things are &#8212; not what you should do? If it tells you what to do &#8594; it&#39;s a principle or framework.</div></div></div>
+              <div class="criterion"><span class="criterion-num">05</span><div class="criterion-body"><div class="criterion-name">Verified by Evidence or Experience</div><div class="criterion-test">Test: Can you point to real-world examples confirming this model? If only theoretical &#8594; keep testing before installing it.</div></div></div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- PRINCIPLES -->
+    <div class="layer theme-principles" data-level="2">
+      <div class="layer-node">
+        <div class="node-circle">&#9650;</div>
+        <div class="node-line" style="background: #dc6450;"></div>
+      </div>
+      <div class="layer-card">
+        <div class="card-header">
+          <div class="card-title">Principles</div>
+          <div class="card-tag">Unbreakable anchors</div>
+        </div>
+        <div class="card-definition">Fundamental truths that govern all decisions. Fixed at the top &#8212; not flexible tools. If a protocol ever conflicts with a principle, the principle wins. Every time. No debate.</div>
+        <div class="card-example">
+          <div class="example-label">Universal Example</div>
+          <div class="example-content">Medical principle: <strong>First, do no harm.</strong> A surgeon mid-operation discovers the procedure will cause more harm than good. The principle overrides the protocol. They stop.</div>
+        </div>
+        <div class="card-dr-k">
+          <div class="drk-label">Dr. K</div>
+          <div class="drk-content">Salah is non-negotiable &#8212; overrides every deadline. Amanah governs every client and community relationship. Build in public, document everything.</div>
+        </div>
+        <details>
+          <summary>Qualification Criteria</summary>
+          <div class="criteria-body">
+            <div class="criteria-title">To qualify as a Principle, it must pass all 5:</div>
+            <div class="criteria-list">
+              <div class="criterion"><span class="criterion-num">01</span><div class="criterion-body"><div class="criterion-name">Non-Negotiable Under Pressure</div><div class="criterion-test">Test: Would you hold this even when it costs you &#8212; money, time, opportunity? If you&#39;d bend it &#8594; it&#39;s a preference, not a principle.</div></div></div>
+              <div class="criterion"><span class="criterion-num">02</span><div class="criterion-body"><div class="criterion-name">Governs Decisions, Not Just Actions</div><div class="criterion-test">Test: Does it influence what you decide, not just what you do? If it only affects one behaviour &#8594; it belongs in a protocol.</div></div></div>
+              <div class="criterion"><span class="criterion-num">03</span><div class="criterion-body"><div class="criterion-name">Overrides Protocols When They Conflict</div><div class="criterion-test">Test: If your protocol said one thing and this principle said another &#8212; which wins? If the protocol wins &#8594; this isn&#39;t actually a principle.</div></div></div>
+              <div class="criterion"><span class="criterion-num">04</span><div class="criterion-body"><div class="criterion-name">Traceable to Belief or Philosophy</div><div class="criterion-test">Test: Can you explain why you hold this by pointing to a deeper belief? If it floats without a root &#8594; it may be a rule you inherited, not one you own.</div></div></div>
+              <div class="criterion"><span class="criterion-num">05</span><div class="criterion-body"><div class="criterion-name">You Would Teach It to Your Children</div><div class="criterion-test">Test: Is this something you want embedded in the next generation as non-negotiable? If you wouldn&#39;t stake their character on it &#8594; it&#39;s a personal preference.</div></div></div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- OPERATING SYSTEM -->
+    <div class="layer theme-os" data-level="3">
+      <div class="layer-node">
+        <div class="node-circle">&#11042;</div>
+        <div class="node-line" style="background: #3c8cdc;"></div>
+      </div>
+      <div class="layer-card">
+        <div class="card-header">
+          <div class="card-title">Operating System</div>
+          <div class="card-tag">Structured environment</div>
+        </div>
+        <div class="card-definition">The complete structured environment through which principles and models are put into daily practice. The OS doesn&#39;t do the work &#8212; it creates the conditions for protocols to run reliably.</div>
+        <div class="card-example">
+          <div class="example-label">Universal Example</div>
+          <div class="example-content">A hospital&#39;s <strong>surgical department OS:</strong> staffing rotas, sterilisation schedules, theatre booking systems, equipment maintenance cycles. None of this is the surgery &#8212; it&#39;s what makes surgery possible.</div>
+        </div>
+        <div class="card-dr-k">
+          <div class="drk-label">Dr. K</div>
+          <div class="drk-content">Brain Energy OS&#8482;, Fitrah OS&#8482;, RAFEEQ&#8482;, BUILD brand OS, Energise&#8482; OS. Each is a structured environment housing multiple protocols underneath it.</div>
+        </div>
+        <details>
+          <summary>Qualification Criteria</summary>
+          <div class="criteria-body">
+            <div class="criteria-title">To qualify as an Operating System, it must pass all 5:</div>
+            <div class="criteria-list">
+              <div class="criterion"><span class="criterion-num">01</span><div class="criterion-body"><div class="criterion-name">Houses Multiple Protocols</div><div class="criterion-test">Test: Does it contain more than one protocol? If only one sequence &#8594; it&#39;s a protocol, not an OS.</div></div></div>
+              <div class="criterion"><span class="criterion-num">02</span><div class="criterion-body"><div class="criterion-name">Serves a Single Domain or Purpose</div><div class="criterion-test">Test: Does it govern one clearly defined area? If it tries to govern everything &#8594; it&#39;s too broad. Split it.</div></div></div>
+              <div class="criterion"><span class="criterion-num">03</span><div class="criterion-body"><div class="criterion-name">Creates Conditions, Not Just Actions</div><div class="criterion-test">Test: Does it set up the environment for protocols to run? If it&#39;s just a list of things to do &#8594; it&#39;s a protocol, not an OS.</div></div></div>
+              <div class="criterion"><span class="criterion-num">04</span><div class="criterion-body"><div class="criterion-name">Aligned With Principles Above It</div><div class="criterion-test">Test: Does every element reflect your principles? If any part contradicts a principle &#8594; it must be removed or redesigned.</div></div></div>
+              <div class="criterion"><span class="criterion-num">05</span><div class="criterion-body"><div class="criterion-name">Runs Without Constant Decision-Making</div><div class="criterion-test">Test: Once set up, does it largely run itself? If you rethink it daily &#8594; it&#39;s not yet an OS, it&#39;s a plan.</div></div></div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- PROTOCOLS -->
+    <div class="layer theme-protocol" data-level="4">
+      <div class="layer-node">
+        <div class="node-circle">&#9654;</div>
+        <div class="node-line" style="background: #dca03c;"></div>
+      </div>
+      <div class="layer-card">
+        <div class="card-header">
+          <div class="card-title">Protocols</div>
+          <div class="card-tag">Precise repeatable sequences</div>
+        </div>
+        <div class="card-definition">Exact sequences of actions designed to produce a guaranteed outcome. Order matters. Skipping a step breaks the mechanism. Removes human error from important processes.</div>
+        <div class="card-example">
+          <div class="example-label">Universal Example</div>
+          <div class="example-content"><strong>Surgical hand-washing:</strong> Remove jewellery &#8594; wet to elbow &#8594; apply scrub &#8594; brush nails 2 min &#8594; scrub in pattern &#8594; rinse fingertips-first &#8594; dry with sterile towel &#8594; hands raised until gloved. Exact sequence. Non-negotiable.</div>
+        </div>
+        <div class="card-dr-k">
+          <div class="drk-label">Dr. K</div>
+          <div class="drk-content">The Quantum Energy Ritual&#8482; (7 steps). NeuroConnect&#8482; 01&#8211;13. Neuro Arc (12 daily rituals). Content production: shoot &#8594; edit &#8594; extract stills.</div>
+        </div>
+        <details>
+          <summary>Qualification Criteria</summary>
+          <div class="criteria-body">
+            <div class="criteria-title">To qualify as a Protocol, it must pass all 6:</div>
+            <div class="criteria-list">
+              <div class="criterion"><span class="criterion-num">01</span><div class="criterion-body"><div class="criterion-name">Fixed Sequence</div><div class="criterion-test">Test: Does order matter &#8212; would doing steps differently produce a worse result? If order doesn&#39;t matter &#8594; it&#39;s a checklist, not a protocol.</div></div></div>
+              <div class="criterion"><span class="criterion-num">02</span><div class="criterion-body"><div class="criterion-name">Each Step Has a Mechanism</div><div class="criterion-test">Test: Can you explain why each step exists biologically, psychologically, or logically? If a step has no reason &#8594; remove it.</div></div></div>
+              <div class="criterion"><span class="criterion-num">03</span><div class="criterion-body"><div class="criterion-name">Produces a Predictable Outcome</div><div class="criterion-test">Test: If followed correctly every time, does it reliably produce the same result? If outcomes vary widely &#8594; it&#39;s not tight enough yet.</div></div></div>
+              <div class="criterion"><span class="criterion-num">04</span><div class="criterion-body"><div class="criterion-name">Completable by Anyone Trained</div><div class="criterion-test">Test: Could someone else follow this and produce the same result without you present? If not &#8594; it&#39;s a skill, not a protocol.</div></div></div>
+              <div class="criterion"><span class="criterion-num">05</span><div class="criterion-body"><div class="criterion-name">Sits Inside an OS</div><div class="criterion-test">Test: Is this housed within a defined Operating System? A protocol floating alone will eventually break down.</div></div></div>
+              <div class="criterion"><span class="criterion-num">06</span><div class="criterion-body"><div class="criterion-name">Removes Decision-Making From Execution</div><div class="criterion-test">Test: When running it, are you following &#8212; not deciding? If you&#39;re still making judgment calls mid-protocol &#8594; it needs more definition.</div></div></div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- STEPS -->
+    <div class="layer theme-steps" data-level="5">
+      <div class="layer-node">
+        <div class="node-circle">&#183;</div>
+      </div>
+      <div class="layer-card">
+        <div class="card-header">
+          <div class="card-title">Steps / Actions</div>
+          <div class="card-tag">What actually happens</div>
+        </div>
+        <div class="card-definition">The individual physical or cognitive actions that make up each protocol step. The atomic unit of execution. This is where belief finally becomes behaviour in the real world.</div>
+        <div class="card-example">
+          <div class="example-label">Universal Example</div>
+          <div class="example-content">Within the hand-washing protocol, step 4 is &#34;scrub nails.&#34; Individual actions: <strong>pick up brush &#8594; apply to left thumb nail &#8594; circular motion x10 &#8594; move to index finger...</strong> Each micro-action has a reason.</div>
+        </div>
+        <div class="card-dr-k">
+          <div class="drk-label">Dr. K</div>
+          <div class="drk-content">Wake at Fajr. Open journal. Write the Surrender Line. Begin the Quantum Energy Ritual. Each line in your Pursuit Tracker. Each sentence written to the Content Gate.</div>
+        </div>
+        <details>
+          <summary>Qualification Criteria</summary>
+          <div class="criteria-body">
+            <div class="criteria-title">To qualify as a Step, it must pass all 4:</div>
+            <div class="criteria-list">
+              <div class="criterion"><span class="criterion-num">01</span><div class="criterion-body"><div class="criterion-name">Single, Atomic Action</div><div class="criterion-test">Test: Can it be described in one verb + one object? &#34;Open journal.&#34; &#34;Drink water.&#34; If it contains multiple actions &#8594; split it.</div></div></div>
+              <div class="criterion"><span class="criterion-num">02</span><div class="criterion-body"><div class="criterion-name">Has a Clear Completion Point</div><div class="criterion-test">Test: Is it obvious when this step is done? If you can&#39;t tell when to move to the next step &#8594; it needs a clearer endpoint.</div></div></div>
+              <div class="criterion"><span class="criterion-num">03</span><div class="criterion-body"><div class="criterion-name">Belongs to a Protocol Above It</div><div class="criterion-test">Test: Is this step housed inside a named protocol? A step without a protocol is just a habit &#8212; and habits break.</div></div></div>
+              <div class="criterion"><span class="criterion-num">04</span><div class="criterion-body"><div class="criterion-name">Traceable to the Belief at the Top</div><div class="criterion-test">Test: Can you trace this action all the way up through protocol &#8594; OS &#8594; principles &#8594; philosophy &#8594; belief? If the chain breaks &#8594; it may not belong in your system.</div></div></div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FRAMEWORK -->
+  <div class="framework-layer">
+    <div class="framework-card">
+      <div class="framework-torch">&#128294;</div>
+      <div class="framework-body">
+        <h3>Frameworks &#8212; The Thinking Torch</h3>
+        <div class="def">Not a layer. A cognitive tool carried across every level. A framework organises thinking and structures output &#8212; but unlike protocols, it has no fixed sequence. Unlike principles, it doesn&#39;t govern. It illuminates.</div>
+        <div class="framework-examples">
+          <div class="fw-pill">SLAY&#8482;</div>
+          <div class="fw-pill">SPARK&#8482;</div>
+          <div class="fw-pill">Content Gate Protocol&#8482;</div>
+          <div class="fw-pill">SOAP (Medicine)</div>
+          <div class="fw-pill">SWOT</div>
+          <div class="fw-pill">First Principles</div>
+          <div class="fw-pill">RELIVE Method</div>
+        </div>
+        <div class="framework-flows">
+          Used when <span>designing an OS</span> &#183; Used when <span>building a protocol</span> &#183; Used when <span>executing a step</span> &#183; Used when <span>evaluating an outcome</span>
+        </div>
+        <details>
+          <summary>Qualification Criteria</summary>
+          <div class="criteria-body">
+            <div class="criteria-title">To qualify as a Framework, it must pass all 5:</div>
+            <div class="criteria-list">
+              <div class="criterion"><span class="criterion-num">01</span><div class="criterion-body"><div class="criterion-name">Structures Thinking, Not Action</div><div class="criterion-test">Test: Does it organise how you think &#8212; not prescribe exact steps? If it dictates a fixed sequence &#8594; it&#39;s a protocol, not a framework.</div></div></div>
+              <div class="criterion"><span class="criterion-num">02</span><div class="criterion-body"><div class="criterion-name">Applicable Across Multiple Contexts</div><div class="criterion-test">Test: Can you use this thinking structure in more than one domain? If it only works in one context &#8594; it&#39;s a template, not a framework.</div></div></div>
+              <div class="criterion"><span class="criterion-num">03</span><div class="criterion-body"><div class="criterion-name">Has Named, Distinct Components</div><div class="criterion-test">Test: Does it have clearly labelled parts that together cover the whole thinking space? (e.g. SLAY: Story, Lesson, Actionable, You). If vague &#8594; it&#39;s a method, not a framework.</div></div></div>
+              <div class="criterion"><span class="criterion-num">04</span><div class="criterion-body"><div class="criterion-name">Fluid &#8212; Works at Any Hierarchy Level</div><div class="criterion-test">Test: Can you use it when designing an OS, building a protocol, and executing a step? If it only works at one level &#8594; it&#39;s a tool, not a framework.</div></div></div>
+              <div class="criterion"><span class="criterion-num">05</span><div class="criterion-body"><div class="criterion-name">Improves Output Quality When Applied</div><div class="criterion-test">Test: Is there a measurable difference in quality when you use this versus not? If output is the same either way &#8594; it&#39;s not doing real work as a framework.</div></div></div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-dot" style="background: #c9a84c;"></div>
+      <div class="legend-text"><strong style="color: #e8c97a;">Belief</strong><span>Pre-rational truth</span></div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background: #a07edc;"></div>
+      <div class="legend-text"><strong style="color: #c4a8f0;">Philosophy</strong><span>Organised worldview</span></div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background: #3cb48c;"></div>
+      <div class="legend-text"><strong style="color: #7ed4b4;">Mental Models</strong><span>Maps of reality</span></div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background: #dc6450;"></div>
+      <div class="legend-text"><strong style="color: #f0a090;">Principles</strong><span>Unbreakable anchors</span></div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background: #3c8cdc;"></div>
+      <div class="legend-text"><strong style="color: #90c4f0;">Operating System</strong><span>Structured environment</span></div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background: #dca03c;"></div>
+      <div class="legend-text"><strong style="color: #f0d090;">Protocols</strong><span>Repeatable sequences</span></div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background: #909090;"></div>
+      <div class="legend-text"><strong style="color: #c8c8c8;">Steps</strong><span>Atomic actions</span></div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background: #c9a84c; opacity: 0.5;"></div>
+      <div class="legend-text"><strong style="color: #e8c97a;">Frameworks</strong><span>Fluid &#8212; across all layers</span></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
